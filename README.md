@@ -1,29 +1,20 @@
 # Codeium Product Quoting Tool
 
-A web-based application that helps potential customers evaluate Codeium's products based on their specific needs and generate a downloadable price quote.
+A web-based application for generating price quotes for Codeium products.
 
-## Features
+## Fresh Start
 
-- Input company information and development team size
-- Select license types (Enterprise vs Cascade)
-- Guided questionnaire for license recommendations
-- Generate customized quotes
-- Export quotes as downloadable PDFs
+This project has been reset to a minimal configuration, ready for a fresh implementation.
 
 ## Technologies Used
 
 - React.js for the frontend
-- jsPDF for PDF generation
-- React Router for navigation
 - Bootstrap for responsive design
+- React Router for navigation (to be implemented)
+- jsPDF for PDF generation (to be implemented)
 
 ## Getting Started
 
-1. Clone this repository
-2. Install dependencies: `npm install`
-3. Start the development server: `npm start`
-4. Build for production: `npm run build`
-
-## Deployment
-
-This application can be deployed to various hosting platforms such as Vercel, Netlify, GitHub Pages, Render, or Firebase Hosting.
+1. Install dependencies: `npm install`
+2. Start the development server: `npm start`
+3. The application will be available at http://localhost:3000
