@@ -113,17 +113,8 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
       return;
     }
     
+    // Always advance to the next step
     setStep(step + 1);
-    
-    // If moving to step 3 and using questionnaire, calculate recommended licenses
-    if (step === 2 && formData.licenseSelectionMethod === 'questionnaire') {
-      const recommended = calculateRecommendedLicenses();
-      setFormData({
-        ...formData,
-        enterpriseLicenses: recommended.enterprise,
-        cascadeLicenses: recommended.cascade
-      });
-    }
   };
 
   const prevStep = () => {
@@ -145,7 +136,8 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
     
     const quoteDetails = {
       companyName: formData.companyName,
-      teamSize: formData.teamSize,
+      teamSize: formData.licenseSelectionMethod === 'questionnaire' ? formData.teamSize : 
+                (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)).toString(),
       enterpriseLicenses: formData.enterpriseLicenses,
       cascadeLicenses: formData.cascadeLicenses,
       quoteId: quoteId,
@@ -155,7 +147,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
     };
     
     updateQuoteData(quoteDetails);
-    navigate('/quote-review');
+    navigate('/quote');
   };
 
   return (
@@ -193,20 +185,47 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     </Form.Control.Feedback>
                   </Form.Group>
 
-                  <Form.Group className="mb-3" controlId="teamSize">
-                    <Form.Label>Software Development Team Size</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="teamSize"
-                      value={formData.teamSize}
-                      onChange={handleNumberChange}
-                      min="1"
-                      required
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      Please provide your team size (minimum 1).
-                    </Form.Control.Feedback>
+                  <Form.Group className="mb-4">
+                    <Form.Label>License Selection Method</Form.Label>
+                    <div>
+                      <Form.Check
+                        type="radio"
+                        id="manual-selection"
+                        name="licenseSelectionMethod"
+                        value="manual"
+                        label="I know how many licenses I need"
+                        checked={formData.licenseSelectionMethod === 'manual'}
+                        onChange={handleRadioChange}
+                        className="mb-2"
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="questionnaire"
+                        name="licenseSelectionMethod"
+                        value="questionnaire"
+                        label="I'm not sure what licenses I need (use questionnaire)"
+                        checked={formData.licenseSelectionMethod === 'questionnaire'}
+                        onChange={handleRadioChange}
+                      />
+                    </div>
                   </Form.Group>
+                  
+                  {formData.licenseSelectionMethod === 'questionnaire' && (
+                    <Form.Group className="mb-3" controlId="teamSize">
+                      <Form.Label>Software Development Team Size</Form.Label>
+                      <Form.Control
+                        type="number"
+                        name="teamSize"
+                        value={formData.teamSize}
+                        onChange={handleNumberChange}
+                        min="1"
+                        required={formData.licenseSelectionMethod === 'questionnaire'}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        Please provide your team size (minimum 1).
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  )}
 
                   <div className="d-flex justify-content-end mt-4">
                     <Button type="submit" variant="primary">
@@ -218,28 +237,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
 
               {step === 2 && (
                 <Form onSubmit={nextStep}>
-                  <h4 className="mb-3">License Selection Method</h4>
-                  <Form.Group className="mb-4">
-                    <Form.Check
-                      type="radio"
-                      id="manual-selection"
-                      name="licenseSelectionMethod"
-                      value="manual"
-                      label="I know how many licenses I need"
-                      checked={formData.licenseSelectionMethod === 'manual'}
-                      onChange={handleRadioChange}
-                      className="mb-2"
-                    />
-                    <Form.Check
-                      type="radio"
-                      id="questionnaire"
-                      name="licenseSelectionMethod"
-                      value="questionnaire"
-                      label="I'm not sure what licenses I need (use questionnaire)"
-                      checked={formData.licenseSelectionMethod === 'questionnaire'}
-                      onChange={handleRadioChange}
-                    />
-                  </Form.Group>
+                  <h4 className="mb-3">License Information</h4>
 
                   {formData.licenseSelectionMethod === 'manual' ? (
                     <div>
@@ -299,7 +297,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                         </Col>
                       </Row>
 
-                      {parseInt(formData.teamSize) !== (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)) && (
+                      {formData.licenseSelectionMethod === 'questionnaire' && parseInt(formData.teamSize) !== (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)) && (
                         <div className="alert alert-warning">
                           <strong>Note:</strong> The total number of licenses ({parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)}) 
                           does not match your team size ({formData.teamSize}).
@@ -317,7 +315,16 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                         <Form.Range
                           name="proprietaryCodePercentage"
                           value={formData.proprietaryCodePercentage}
-                          onChange={handleSliderChange}
+                          onChange={(e) => {
+                            handleSliderChange(e);
+                            // Calculate recommendations immediately when slider changes
+                            const recommended = calculateRecommendedLicenses();
+                            setFormData(prev => ({
+                              ...prev,
+                              enterpriseLicenses: recommended.enterprise,
+                              cascadeLicenses: recommended.cascade
+                            }));
+                          }}
                           min="0"
                           max="100"
                         />
@@ -336,7 +343,16 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                         <Form.Range
                           name="codeCompletionImportance"
                           value={formData.codeCompletionImportance}
-                          onChange={handleSliderChange}
+                          onChange={(e) => {
+                            handleSliderChange(e);
+                            // Calculate recommendations immediately when slider changes
+                            const recommended = calculateRecommendedLicenses();
+                            setFormData(prev => ({
+                              ...prev,
+                              enterpriseLicenses: recommended.enterprise,
+                              cascadeLicenses: recommended.cascade
+                            }));
+                          }}
                           min="1"
                           max="5"
                         />
@@ -357,7 +373,18 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                             value="yes"
                             label="Yes"
                             checked={formData.multiRepoWork === 'yes'}
-                            onChange={handleRadioChange}
+                            onChange={(e) => {
+                              handleRadioChange(e);
+                              // Calculate recommendations immediately when radio changes
+                              setTimeout(() => {
+                                const recommended = calculateRecommendedLicenses();
+                                setFormData(prev => ({
+                                  ...prev,
+                                  enterpriseLicenses: recommended.enterprise,
+                                  cascadeLicenses: recommended.cascade
+                                }));
+                              }, 0);
+                            }}
                           />
                           <Form.Check
                             inline
@@ -367,7 +394,18 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                             value="no"
                             label="No"
                             checked={formData.multiRepoWork === 'no'}
-                            onChange={handleRadioChange}
+                            onChange={(e) => {
+                              handleRadioChange(e);
+                              // Calculate recommendations immediately when radio changes
+                              setTimeout(() => {
+                                const recommended = calculateRecommendedLicenses();
+                                setFormData(prev => ({
+                                  ...prev,
+                                  enterpriseLicenses: recommended.enterprise,
+                                  cascadeLicenses: recommended.cascade
+                                }));
+                              }, 0);
+                            }}
                           />
                         </div>
                       </Form.Group>
@@ -377,7 +415,18 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                         <Form.Select
                           name="programmingLanguagesCount"
                           value={formData.programmingLanguagesCount}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            // Calculate recommendations immediately when selection changes
+                            setTimeout(() => {
+                              const recommended = calculateRecommendedLicenses();
+                              setFormData(prev => ({
+                                ...prev,
+                                enterpriseLicenses: recommended.enterprise,
+                                cascadeLicenses: recommended.cascade
+                              }));
+                            }, 0);
+                          }}
                         >
                           <option value="1-3">1-3 languages</option>
                           <option value="4-6">4-6 languages</option>
@@ -396,7 +445,18 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                             value="yes"
                             label="Yes"
                             checked={formData.needsEnterpriseSecurity === 'yes'}
-                            onChange={handleRadioChange}
+                            onChange={(e) => {
+                              handleRadioChange(e);
+                              // Calculate recommendations immediately when radio changes
+                              setTimeout(() => {
+                                const recommended = calculateRecommendedLicenses();
+                                setFormData(prev => ({
+                                  ...prev,
+                                  enterpriseLicenses: recommended.enterprise,
+                                  cascadeLicenses: recommended.cascade
+                                }));
+                              }, 0);
+                            }}
                           />
                           <Form.Check
                             inline
@@ -406,10 +466,60 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                             value="no"
                             label="No"
                             checked={formData.needsEnterpriseSecurity === 'no'}
-                            onChange={handleRadioChange}
+                            onChange={(e) => {
+                              handleRadioChange(e);
+                              // Calculate recommendations immediately when radio changes
+                              setTimeout(() => {
+                                const recommended = calculateRecommendedLicenses();
+                                setFormData(prev => ({
+                                  ...prev,
+                                  enterpriseLicenses: recommended.enterprise,
+                                  cascadeLicenses: recommended.cascade
+                                }));
+                              }, 0);
+                            }}
                           />
                         </div>
                       </Form.Group>
+                      
+                      <hr className="my-4" />
+                      
+                      <h5 className="mb-3">Recommended License Allocation</h5>
+                      <p className="mb-4">Based on your answers, we've calculated a recommended license mix. You can adjust these numbers if needed:</p>
+                      
+                      <Row className="mb-4">
+                        <Col md={6}>
+                          <Form.Group controlId="enterpriseLicenses">
+                            <Form.Label>Number of Enterprise Licenses</Form.Label>
+                            <Form.Control
+                              type="number"
+                              name="enterpriseLicenses"
+                              value={formData.enterpriseLicenses}
+                              onChange={handleNumberChange}
+                              min="0"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group controlId="cascadeLicenses">
+                            <Form.Label>Number of Cascade Licenses</Form.Label>
+                            <Form.Control
+                              type="number"
+                              name="cascadeLicenses"
+                              value={formData.cascadeLicenses}
+                              onChange={handleNumberChange}
+                              min="0"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      
+                      {formData.licenseSelectionMethod === 'questionnaire' && parseInt(formData.teamSize) !== (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)) && (
+                        <div className="alert alert-warning">
+                          <strong>Note:</strong> The total number of licenses ({parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)}) 
+                          does not match your team size ({formData.teamSize}).
+                        </div>
+                      )}
                     </div>
                   )}
 
