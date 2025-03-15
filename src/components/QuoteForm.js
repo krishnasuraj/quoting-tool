@@ -1,32 +1,33 @@
-import React, { useState } from 'react';
-import { Container, Form, Button, Row, Col, Card, Accordion, ProgressBar } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { v4 as uuidv4 } from 'uuid';
 
 const QuoteForm = ({ quoteData, updateQuoteData }) => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     companyName: quoteData.companyName || '',
-    teamSize: quoteData.teamSize || '',
-    licenseSelectionMethod: 'manual',
+    licenseMethod: quoteData.licenseMethod || 'manual',
+    teamSize: quoteData.teamSize || 0,
     enterpriseLicenses: quoteData.enterpriseLicenses || 0,
     cascadeLicenses: quoteData.cascadeLicenses || 0,
-    // Questionnaire data
-    proprietaryCodePercentage: 50,
-    codeCompletionImportance: 3,
-    multiRepoWork: 'no',
-    programmingLanguagesCount: '1-3',
-    needsEnterpriseSecurity: 'no'
+    aiFeaturePercentage: quoteData.aiFeaturePercentage || 50,
+    complexDesignFrequency: quoteData.complexDesignFrequency || 50,
+    newFeaturesPercentage: quoteData.newFeaturesPercentage || 50
   });
-
-  const [validated, setValidated] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value
+    });
+  };
+
+  const handleToggleChange = (method) => {
+    setFormData({
+      ...formData,
+      licenseMethod: method
     });
   };
 
@@ -38,112 +39,49 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
     });
   };
 
-  const handleRadioChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handleNumberChange = (e) => {
-    const { name, value } = e.target;
-    const numValue = value === '' ? '' : parseInt(value);
-    setFormData({
-      ...formData,
-      [name]: numValue
-    });
-  };
+  // Calculate recommended license mix based on questionnaire
+  useEffect(() => {
+    if (formData.licenseMethod === 'estimate' && formData.teamSize > 0) {
+      calculateRecommendedLicenses();
+    }
+  }, [formData.teamSize, formData.aiFeaturePercentage, formData.complexDesignFrequency, formData.newFeaturesPercentage]);
 
   const calculateRecommendedLicenses = () => {
-    const { teamSize, proprietaryCodePercentage, codeCompletionImportance, multiRepoWork, programmingLanguagesCount, needsEnterpriseSecurity } = formData;
+    if (formData.teamSize <= 0) return;
+
+    // Calculate a weighted score for Cascade licenses
+    const aiScore = formData.aiFeaturePercentage / 100;
+    const complexityScore = formData.complexDesignFrequency / 100;
+    const innovationScore = formData.newFeaturesPercentage / 100;
     
-    if (!teamSize) return { enterprise: 0, cascade: 0 };
+    // Average the scores and apply to team size
+    const cascadeRatio = (aiScore + complexityScore + innovationScore) / 3;
+    const cascadeLicenses = Math.round(formData.teamSize * cascadeRatio);
+    const enterpriseLicenses = formData.teamSize - cascadeLicenses;
     
-    // Convert team size to number
-    const totalTeamSize = parseInt(teamSize);
-    
-    // Base calculation - start with all Enterprise licenses
-    let cascadePercentage = 0;
-    
-    // Factors that increase Cascade percentage
-    // 1. High proprietary code percentage increases Cascade need
-    cascadePercentage += (proprietaryCodePercentage / 100) * 20;
-    
-    // 2. High importance of code completion increases Cascade need
-    cascadePercentage += (codeCompletionImportance / 5) * 15;
-    
-    // 3. Multi-repo work strongly suggests Cascade
-    if (multiRepoWork === 'yes') {
-      cascadePercentage += 25;
-    }
-    
-    // 4. More programming languages suggests Cascade
-    if (programmingLanguagesCount === '4-6') {
-      cascadePercentage += 15;
-    } else if (programmingLanguagesCount === '7+') {
-      cascadePercentage += 25;
-    }
-    
-    // 5. Enterprise security needs suggest more Enterprise licenses
-    if (needsEnterpriseSecurity === 'yes') {
-      cascadePercentage -= 10; // Reduce Cascade percentage
-    }
-    
-    // Ensure percentage is within bounds
-    cascadePercentage = Math.max(0, Math.min(100, cascadePercentage));
-    
-    // Calculate license counts
-    const cascadeLicenses = Math.round((cascadePercentage / 100) * totalTeamSize);
-    const enterpriseLicenses = totalTeamSize - cascadeLicenses;
-    
-    return {
-      enterprise: enterpriseLicenses,
-      cascade: cascadeLicenses
-    };
+    setFormData(prev => ({
+      ...prev,
+      cascadeLicenses,
+      enterpriseLicenses
+    }));
   };
 
-  const nextStep = (e) => {
-    if (e) e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
     
-    const form = e.currentTarget;
-    if (form.checkValidity() === false) {
-      e.stopPropagation();
-      setValidated(true);
-      return;
-    }
-    
-    // Always advance to the next step
-    setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    setStep(step - 1);
-  };
-
-  const calculateTotal = () => {
-    const enterpriseTotal = formData.enterpriseLicenses * 1000;
-    const cascadeTotal = formData.cascadeLicenses * 2000;
-    return enterpriseTotal + cascadeTotal;
-  };
-
-  const generateQuote = () => {
+    // Generate quote details
     const today = new Date();
     const expiryDate = new Date();
     expiryDate.setDate(today.getDate() + 30);
     
-    const quoteId = uuidv4().substring(0, 8).toUpperCase();
+    const totalCost = (formData.enterpriseLicenses * 1000) + (formData.cascadeLicenses * 2000);
     
     const quoteDetails = {
-      companyName: formData.companyName,
-      teamSize: formData.licenseSelectionMethod === 'questionnaire' ? formData.teamSize : 
-                (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)).toString(),
-      enterpriseLicenses: formData.enterpriseLicenses,
-      cascadeLicenses: formData.cascadeLicenses,
-      quoteId: quoteId,
+      ...formData,
+      quoteId: uuidv4().substring(0, 8),
       quoteDate: today.toISOString().split('T')[0],
       expiryDate: expiryDate.toISOString().split('T')[0],
-      totalCost: calculateTotal()
+      totalCost
     };
     
     updateQuoteData(quoteDetails);
@@ -151,420 +89,204 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
   };
 
   return (
-    <Container className="py-4">
-      <Row className="justify-content-center mb-4">
-        <Col md={8}>
-          <h2 className="text-center mb-4">Create Your Codeium Quote</h2>
-          <ProgressBar 
-            now={step * 33.33} 
-            className="mb-4" 
-            variant="primary" 
-            label={`Step ${step} of 3`} 
-          />
-        </Col>
-      </Row>
-
-      <Row className="justify-content-center">
-        <Col md={8}>
-          <Card className="shadow-sm">
-            <Card.Body>
-              {step === 1 && (
-                <Form noValidate validated={validated} onSubmit={nextStep}>
-                  <h4 className="mb-3">Company Information</h4>
-                  <Form.Group className="mb-3" controlId="companyName">
-                    <Form.Label>Company Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      Please provide your company name.
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  <Form.Group className="mb-4">
-                    <Form.Label>License Selection Method</Form.Label>
-                    <div>
-                      <Form.Check
-                        type="radio"
-                        id="manual-selection"
-                        name="licenseSelectionMethod"
-                        value="manual"
-                        label="I know how many licenses I need"
-                        checked={formData.licenseSelectionMethod === 'manual'}
-                        onChange={handleRadioChange}
-                        className="mb-2"
-                      />
-                      <Form.Check
-                        type="radio"
-                        id="questionnaire"
-                        name="licenseSelectionMethod"
-                        value="questionnaire"
-                        label="I'm not sure what licenses I need (use questionnaire)"
-                        checked={formData.licenseSelectionMethod === 'questionnaire'}
-                        onChange={handleRadioChange}
-                      />
-                    </div>
-                  </Form.Group>
-                  
-                  {formData.licenseSelectionMethod === 'questionnaire' && (
-                    <Form.Group className="mb-3" controlId="teamSize">
-                      <Form.Label>Software Development Team Size</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="teamSize"
-                        value={formData.teamSize}
-                        onChange={handleNumberChange}
-                        min="1"
-                        required={formData.licenseSelectionMethod === 'questionnaire'}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Please provide your team size (minimum 1).
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  )}
-
-                  <div className="d-flex justify-content-end mt-4">
-                    <Button type="submit" variant="primary">
-                      Next
-                    </Button>
+    <Container>
+      <div className="form-container">
+        <div className="main-form">
+          <h2 className="form-title">Get your Codeium quote</h2>
+          
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="form-group">
+              <Form.Label>Company Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleInputChange}
+                required
+                className="bg-dark text-white"
+              />
+            </Form.Group>
+            
+            <div className="toggle-container">
+              <div 
+                className={`toggle-option ${formData.licenseMethod === 'manual' ? 'active' : ''}`}
+                onClick={() => handleToggleChange('manual')}
+              >
+                I know how many licenses I want
+              </div>
+              <div 
+                className={`toggle-option ${formData.licenseMethod === 'estimate' ? 'active' : ''}`}
+                onClick={() => handleToggleChange('estimate')}
+              >
+                Help me estimate
+              </div>
+            </div>
+            
+            {formData.licenseMethod === 'manual' ? (
+              <div className="manual-license-section">
+                <Form.Group className="license-input">
+                  <Form.Label>Number of Cascade Licenses ($2,000/year)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="cascadeLicenses"
+                    value={formData.cascadeLicenses}
+                    onChange={handleInputChange}
+                    min="0"
+                    className="cascade-input bg-dark text-white"
+                  />
+                </Form.Group>
+                
+                <Form.Group className="license-input">
+                  <Form.Label>Number of Enterprise Licenses ($1,000/year)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="enterpriseLicenses"
+                    value={formData.enterpriseLicenses}
+                    onChange={handleInputChange}
+                    min="0"
+                    className="bg-dark text-white"
+                  />
+                </Form.Group>
+              </div>
+            ) : (
+              <div className="estimate-section">
+                <Form.Group className="form-group">
+                  <Form.Label>How many total software developers does your team have?</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="teamSize"
+                    value={formData.teamSize}
+                    onChange={handleInputChange}
+                    min="1"
+                    required
+                    className="bg-dark text-white"
+                  />
+                </Form.Group>
+                
+                <div className="slider-container">
+                  <div className="slider-label">
+                    <span>What percentage of your team needs advanced AI features versus basic code completion?</span>
+                    <span>{formData.aiFeaturePercentage}%</span>
                   </div>
-                </Form>
-              )}
-
-              {step === 2 && (
-                <Form onSubmit={nextStep}>
-                  <h4 className="mb-3">License Information</h4>
-
-                  {formData.licenseSelectionMethod === 'manual' ? (
-                    <div>
-                      <h5 className="mb-3">License Information</h5>
-                      <Accordion defaultActiveKey="0" className="mb-4">
-                        <Accordion.Item eventKey="0">
-                          <Accordion.Header>Enterprise License - $1,000/year per seat</Accordion.Header>
-                          <Accordion.Body>
-                            <p>Our Enterprise license provides advanced code completion, code search, and code explanation features for professional developers working on proprietary codebases.</p>
-                            <ul>
-                              <li>AI-powered code completion</li>
-                              <li>Code search across repositories</li>
-                              <li>Code explanation and documentation</li>
-                              <li>Enterprise-grade security</li>
-                            </ul>
-                          </Accordion.Body>
-                        </Accordion.Item>
-                        <Accordion.Item eventKey="1">
-                          <Accordion.Header>Cascade License - $2,000/year per seat</Accordion.Header>
-                          <Accordion.Body>
-                            <p>Our Cascade license includes all Enterprise features plus advanced AI agent capabilities for complex coding tasks and cross-repository work.</p>
-                            <ul>
-                              <li>All Enterprise features</li>
-                              <li>AI agent for complex tasks</li>
-                              <li>Multi-repository context understanding</li>
-                              <li>Advanced code generation</li>
-                              <li>Priority support</li>
-                            </ul>
-                          </Accordion.Body>
-                        </Accordion.Item>
-                      </Accordion>
-
-                      <Row className="mb-3">
-                        <Col md={6}>
-                          <Form.Group controlId="enterpriseLicenses">
-                            <Form.Label>Number of Enterprise Licenses</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="enterpriseLicenses"
-                              value={formData.enterpriseLicenses}
-                              onChange={handleNumberChange}
-                              min="0"
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group controlId="cascadeLicenses">
-                            <Form.Label>Number of Cascade Licenses</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="cascadeLicenses"
-                              value={formData.cascadeLicenses}
-                              onChange={handleNumberChange}
-                              min="0"
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-
-                      {formData.licenseSelectionMethod === 'questionnaire' && parseInt(formData.teamSize) !== (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)) && (
-                        <div className="alert alert-warning">
-                          <strong>Note:</strong> The total number of licenses ({parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)}) 
-                          does not match your team size ({formData.teamSize}).
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="questionnaire-section">
-                      <h5 className="mb-3">License Recommendation Questionnaire</h5>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          What percentage of your developers work primarily on proprietary code?
-                          <span className="ms-2 text-muted">({formData.proprietaryCodePercentage}%)</span>
-                        </Form.Label>
-                        <Form.Range
-                          name="proprietaryCodePercentage"
-                          value={formData.proprietaryCodePercentage}
-                          onChange={(e) => {
-                            handleSliderChange(e);
-                            // Calculate recommendations immediately when slider changes
-                            const recommended = calculateRecommendedLicenses();
-                            setFormData(prev => ({
-                              ...prev,
-                              enterpriseLicenses: recommended.enterprise,
-                              cascadeLicenses: recommended.cascade
-                            }));
-                          }}
-                          min="0"
-                          max="100"
-                        />
-                        <div className="d-flex justify-content-between">
-                          <small>0%</small>
-                          <small>50%</small>
-                          <small>100%</small>
-                        </div>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          How important is advanced code completion to your team?
-                          <span className="ms-2 text-muted">({formData.codeCompletionImportance}/5)</span>
-                        </Form.Label>
-                        <Form.Range
-                          name="codeCompletionImportance"
-                          value={formData.codeCompletionImportance}
-                          onChange={(e) => {
-                            handleSliderChange(e);
-                            // Calculate recommendations immediately when slider changes
-                            const recommended = calculateRecommendedLicenses();
-                            setFormData(prev => ({
-                              ...prev,
-                              enterpriseLicenses: recommended.enterprise,
-                              cascadeLicenses: recommended.cascade
-                            }));
-                          }}
-                          min="1"
-                          max="5"
-                        />
-                        <div className="d-flex justify-content-between">
-                          <small>Not important</small>
-                          <small>Very important</small>
-                        </div>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Do your developers frequently work across multiple repositories?</Form.Label>
-                        <div>
-                          <Form.Check
-                            inline
-                            type="radio"
-                            id="multi-repo-yes"
-                            name="multiRepoWork"
-                            value="yes"
-                            label="Yes"
-                            checked={formData.multiRepoWork === 'yes'}
-                            onChange={(e) => {
-                              handleRadioChange(e);
-                              // Calculate recommendations immediately when radio changes
-                              setTimeout(() => {
-                                const recommended = calculateRecommendedLicenses();
-                                setFormData(prev => ({
-                                  ...prev,
-                                  enterpriseLicenses: recommended.enterprise,
-                                  cascadeLicenses: recommended.cascade
-                                }));
-                              }, 0);
-                            }}
-                          />
-                          <Form.Check
-                            inline
-                            type="radio"
-                            id="multi-repo-no"
-                            name="multiRepoWork"
-                            value="no"
-                            label="No"
-                            checked={formData.multiRepoWork === 'no'}
-                            onChange={(e) => {
-                              handleRadioChange(e);
-                              // Calculate recommendations immediately when radio changes
-                              setTimeout(() => {
-                                const recommended = calculateRecommendedLicenses();
-                                setFormData(prev => ({
-                                  ...prev,
-                                  enterpriseLicenses: recommended.enterprise,
-                                  cascadeLicenses: recommended.cascade
-                                }));
-                              }, 0);
-                            }}
-                          />
-                        </div>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>How many programming languages does your team regularly use?</Form.Label>
-                        <Form.Select
-                          name="programmingLanguagesCount"
-                          value={formData.programmingLanguagesCount}
-                          onChange={(e) => {
-                            handleInputChange(e);
-                            // Calculate recommendations immediately when selection changes
-                            setTimeout(() => {
-                              const recommended = calculateRecommendedLicenses();
-                              setFormData(prev => ({
-                                ...prev,
-                                enterpriseLicenses: recommended.enterprise,
-                                cascadeLicenses: recommended.cascade
-                              }));
-                            }, 0);
-                          }}
-                        >
-                          <option value="1-3">1-3 languages</option>
-                          <option value="4-6">4-6 languages</option>
-                          <option value="7+">7+ languages</option>
-                        </Form.Select>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Do you need enterprise-grade security features?</Form.Label>
-                        <div>
-                          <Form.Check
-                            inline
-                            type="radio"
-                            id="security-yes"
-                            name="needsEnterpriseSecurity"
-                            value="yes"
-                            label="Yes"
-                            checked={formData.needsEnterpriseSecurity === 'yes'}
-                            onChange={(e) => {
-                              handleRadioChange(e);
-                              // Calculate recommendations immediately when radio changes
-                              setTimeout(() => {
-                                const recommended = calculateRecommendedLicenses();
-                                setFormData(prev => ({
-                                  ...prev,
-                                  enterpriseLicenses: recommended.enterprise,
-                                  cascadeLicenses: recommended.cascade
-                                }));
-                              }, 0);
-                            }}
-                          />
-                          <Form.Check
-                            inline
-                            type="radio"
-                            id="security-no"
-                            name="needsEnterpriseSecurity"
-                            value="no"
-                            label="No"
-                            checked={formData.needsEnterpriseSecurity === 'no'}
-                            onChange={(e) => {
-                              handleRadioChange(e);
-                              // Calculate recommendations immediately when radio changes
-                              setTimeout(() => {
-                                const recommended = calculateRecommendedLicenses();
-                                setFormData(prev => ({
-                                  ...prev,
-                                  enterpriseLicenses: recommended.enterprise,
-                                  cascadeLicenses: recommended.cascade
-                                }));
-                              }, 0);
-                            }}
-                          />
-                        </div>
-                      </Form.Group>
-                      
-                      <hr className="my-4" />
-                      
-                      <h5 className="mb-3">Recommended License Allocation</h5>
-                      <p className="mb-4">Based on your answers, we've calculated a recommended license mix. You can adjust these numbers if needed:</p>
-                      
-                      <Row className="mb-4">
-                        <Col md={6}>
-                          <Form.Group controlId="enterpriseLicenses">
-                            <Form.Label>Number of Enterprise Licenses</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="enterpriseLicenses"
-                              value={formData.enterpriseLicenses}
-                              onChange={handleNumberChange}
-                              min="0"
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group controlId="cascadeLicenses">
-                            <Form.Label>Number of Cascade Licenses</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="cascadeLicenses"
-                              value={formData.cascadeLicenses}
-                              onChange={handleNumberChange}
-                              min="0"
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      
-                      {formData.licenseSelectionMethod === 'questionnaire' && parseInt(formData.teamSize) !== (parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)) && (
-                        <div className="alert alert-warning">
-                          <strong>Note:</strong> The total number of licenses ({parseInt(formData.enterpriseLicenses) + parseInt(formData.cascadeLicenses)}) 
-                          does not match your team size ({formData.teamSize}).
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="d-flex justify-content-between mt-4">
-                    <Button variant="secondary" onClick={prevStep}>
-                      Back
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      Next
-                    </Button>
-                  </div>
-                </Form>
-              )}
-
-              {step === 3 && (
-                <div>
-                  <h4 className="mb-3">Review Your Quote</h4>
-                  <div className="mb-4">
-                    <h5>Company Information</h5>
-                    <p><strong>Company Name:</strong> {formData.companyName}</p>
-                    <p><strong>Team Size:</strong> {formData.teamSize} developers</p>
-                  </div>
-
-                  <div className="mb-4">
-                    <h5>License Selection</h5>
-                    <p><strong>Enterprise Licenses:</strong> {formData.enterpriseLicenses} × $1,000 = ${formData.enterpriseLicenses * 1000}</p>
-                    <p><strong>Cascade Licenses:</strong> {formData.cascadeLicenses} × $2,000 = ${formData.cascadeLicenses * 2000}</p>
-                    <p><strong>Implementation Fee:</strong> $0.00</p>
-                    <h5 className="mt-3">Total Annual Cost: ${calculateTotal()}</h5>
-                  </div>
-
-                  <div className="d-flex justify-content-between mt-4">
-                    <Button variant="secondary" onClick={prevStep}>
-                      Back
-                    </Button>
-                    <Button variant="success" onClick={generateQuote}>
-                      Generate Quote
-                    </Button>
+                  <Form.Range
+                    name="aiFeaturePercentage"
+                    value={formData.aiFeaturePercentage}
+                    onChange={handleSliderChange}
+                    min="0"
+                    max="100"
+                  />
+                  <div className="d-flex justify-content-between">
+                    <small>Basic features</small>
+                    <small>Advanced AI</small>
                   </div>
                 </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                
+                <div className="slider-container">
+                  <div className="slider-label">
+                    <span>How often does your team work on complex design problems instead of routine coding?</span>
+                    <span>{formData.complexDesignFrequency}%</span>
+                  </div>
+                  <Form.Range
+                    name="complexDesignFrequency"
+                    value={formData.complexDesignFrequency}
+                    onChange={handleSliderChange}
+                    min="0"
+                    max="100"
+                  />
+                  <div className="d-flex justify-content-between">
+                    <small>Routine coding</small>
+                    <small>Complex design</small>
+                  </div>
+                </div>
+                
+                <div className="slider-container">
+                  <div className="slider-label">
+                    <span>What percentage of your team builds new features versus maintains existing codebases?</span>
+                    <span>{formData.newFeaturesPercentage}%</span>
+                  </div>
+                  <Form.Range
+                    name="newFeaturesPercentage"
+                    value={formData.newFeaturesPercentage}
+                    onChange={handleSliderChange}
+                    min="0"
+                    max="100"
+                  />
+                  <div className="d-flex justify-content-between">
+                    <small>Maintenance</small>
+                    <small>New features</small>
+                  </div>
+                </div>
+                
+                <div className="recommended-mix mt-4">
+                  <h5>Recommended License Mix</h5>
+                  <p>Based on your answers, we recommend:</p>
+                  
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="license-input">
+                        <Form.Label>Cascade Licenses ($2,000/year)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="cascadeLicenses"
+                          value={formData.cascadeLicenses}
+                          onChange={handleInputChange}
+                          min="0"
+                          className="cascade-input bg-dark text-white"
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="license-input">
+                        <Form.Label>Enterprise Licenses ($1,000/year)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="enterpriseLicenses"
+                          value={formData.enterpriseLicenses}
+                          onChange={handleInputChange}
+                          min="0"
+                          className="bg-dark text-white"
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center">
+              <Button type="submit" className="btn-generate">
+                Generate Quote
+              </Button>
+            </div>
+          </Form>
+        </div>
+        
+        <div className="sidebar">
+          <div className="plan-box cascade-box">
+            <h4>Cascade details</h4>
+            <p><strong>$2,000</strong> per user/year</p>
+            <ul>
+              <li>All Enterprise features</li>
+              <li>AI agent for complex tasks</li>
+              <li>Multi-repository context</li>
+              <li>Advanced code generation</li>
+              <li>Priority support</li>
+            </ul>
+          </div>
+          
+          <div className="plan-box enterprise-box">
+            <h4>Enterprise details</h4>
+            <p><strong>$1,000</strong> per user/year</p>
+            <ul>
+              <li>AI-powered code completion</li>
+              <li>Code search across repositories</li>
+              <li>Code explanation</li>
+              <li>Enterprise-grade security</li>
+              <li>Standard support</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </Container>
   );
 };
