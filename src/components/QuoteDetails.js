@@ -12,7 +12,7 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
     
     // Add Codeium logo/header
     doc.setFontSize(20);
-    doc.setTextColor(13, 202, 240);
+    doc.setTextColor(42, 158, 196);
     doc.text("Codeium", 20, 20);
     
     doc.setFontSize(16);
@@ -36,14 +36,14 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
     let y = 95;
     
     if (quoteData.cascadeLicenses > 0) {
-      doc.text(`Cascade Licenses: ${quoteData.cascadeLicenses} × $2,000`, 20, y);
-      doc.text(`$${quoteData.cascadeLicenses * 2000}`, 170, y, { align: 'right' });
+      doc.text(`Cascade Licenses: ${quoteData.cascadeLicenses.toLocaleString()} × $2,000`, 20, y);
+      doc.text(`$${(quoteData.cascadeLicenses * 2000).toLocaleString()}`, 170, y, { align: 'right' });
       y += 7;
     }
     
     if (quoteData.enterpriseLicenses > 0) {
-      doc.text(`Enterprise Licenses: ${quoteData.enterpriseLicenses} × $1,000`, 20, y);
-      doc.text(`$${quoteData.enterpriseLicenses * 1000}`, 170, y, { align: 'right' });
+      doc.text(`Enterprise Licenses: ${quoteData.enterpriseLicenses.toLocaleString()} × $1,000`, 20, y);
+      doc.text(`$${(quoteData.enterpriseLicenses * 1000).toLocaleString()}`, 170, y, { align: 'right' });
       y += 7;
     }
     
@@ -58,8 +58,8 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
     
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Total Annual Cost:`, 20, y);
-    doc.text(`$${quoteData.totalCost}`, 170, y, { align: 'right' });
+    doc.text(`Total Annual Cost: `, 20, y);
+    doc.text(`$${quoteData.totalCost.toLocaleString()}`, 170, y, { align: 'right' });
     
     // Add footer
     doc.setFontSize(10);
@@ -109,15 +109,15 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
             
             {quoteData.cascadeLicenses > 0 && (
               <div className="quote-line-item">
-                <span>Cascade Licenses: {quoteData.cascadeLicenses} × $2,000</span>
-                <span>${quoteData.cascadeLicenses * 2000}</span>
+                <span>Cascade Licenses: {quoteData.cascadeLicenses.toLocaleString()} × $2,000</span>
+                <span>${(quoteData.cascadeLicenses * 2000).toLocaleString()}</span>
               </div>
             )}
             
             {quoteData.enterpriseLicenses > 0 && (
               <div className="quote-line-item">
-                <span>Enterprise Licenses: {quoteData.enterpriseLicenses} × $1,000</span>
-                <span>${quoteData.enterpriseLicenses * 1000}</span>
+                <span>Enterprise Licenses: {quoteData.enterpriseLicenses.toLocaleString()} × $1,000</span>
+                <span>${(quoteData.enterpriseLicenses * 1000).toLocaleString()}</span>
               </div>
             )}
             
@@ -127,8 +127,8 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
             </div>
             
             <div className="quote-total">
-              <span>Total Annual Cost</span>
-              <span>${quoteData.totalCost}</span>
+              <span>Total Annual Cost </span>
+              <span>${quoteData.totalCost.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -138,10 +138,10 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
         <Button variant="outline-light" onClick={handleEditQuote}>
           Edit Quote
         </Button>
-        <Button variant="info" onClick={generatePDF}>
+        <Button variant="primary" onClick={generatePDF} style={{ backgroundColor: '#2a9ec4', borderColor: '#2a9ec4' }}>
           Download Quote
         </Button>
-        <Button variant="outline-info" onClick={handleNewQuote}>
+        <Button variant="outline-primary" onClick={handleNewQuote} style={{ borderColor: '#2a9ec4', color: '#2a9ec4' }}>
           Generate New Quote
         </Button>
       </div>
