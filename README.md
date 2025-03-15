@@ -2,10 +2,6 @@
 
 A web-based application for generating price quotes for Codeium products.
 
-## Fresh Start
-
-This project has been reset to a minimal configuration, ready for a fresh implementation.
-
 ## Technologies Used
 
 - React.js for the frontend
