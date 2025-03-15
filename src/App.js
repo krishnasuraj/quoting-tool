@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-
-import Header from './components/Header';
-import LandingPage from './components/LandingPage';
 import QuoteForm from './components/QuoteForm';
-import QuoteReview from './components/QuoteReview';
+import QuoteDetails from './components/QuoteDetails';
 
 function App() {
   const [quoteData, setQuoteData] = useState({
     companyName: '',
-    teamSize: '',
+    licenseMethod: 'manual', // 'manual' or 'estimate'
     enterpriseLicenses: 0,
     cascadeLicenses: 0,
+    teamSize: 0,
+    aiFeaturePercentage: 50,
+    complexDesignFrequency: 50,
+    newFeaturesPercentage: 50,
     quoteId: '',
     quoteDate: '',
     expiryDate: '',
@@ -26,23 +27,21 @@ function App() {
 
   return (
     <Router>
-      <div className="App d-flex flex-column min-vh-100">
-        <Header />
-        <main className="flex-grow-1">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route 
-              path="/quote-form" 
-              element={<QuoteForm quoteData={quoteData} updateQuoteData={updateQuoteData} />} 
+      <div className="App">
+        <Routes>
+          <Route path="/" element={
+            <QuoteForm 
+              quoteData={quoteData} 
+              updateQuoteData={updateQuoteData} 
             />
-            <Route 
-              path="/quote" 
-              element={<QuoteReview quoteData={quoteData} updateQuoteData={updateQuoteData} />} 
+          } />
+          <Route path="/quote" element={
+            <QuoteDetails 
+              quoteData={quoteData} 
+              updateQuoteData={updateQuoteData} 
             />
-            {/* Redirect old route to new route */}
-            <Route path="/quote-review" element={<Navigate to="/quote" replace />} />
-          </Routes>
-        </main>
+          } />
+        </Routes>
       </div>
     </Router>
   );
