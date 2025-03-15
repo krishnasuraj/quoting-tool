@@ -1,9 +1,46 @@
-import React, { useRef } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import React, { useRef, useState } from 'react';
+import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 
-const QuoteReview = ({ quoteData }) => {
+const QuoteReview = ({ quoteData, updateQuoteData }) => {
+  const navigate = useNavigate();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedData, setEditedData] = useState({
+    companyName: quoteData.companyName,
+    enterpriseLicenses: quoteData.enterpriseLicenses,
+    cascadeLicenses: quoteData.cascadeLicenses
+  });
+  
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditedData({
+      ...editedData,
+      [name]: value
+    });
+  };
+  
+  const handleEditSubmit = () => {
+    const totalCost = 
+      parseInt(editedData.enterpriseLicenses) * 1000 + 
+      parseInt(editedData.cascadeLicenses) * 2000;
+    
+    const updatedQuoteData = {
+      ...quoteData,
+      companyName: editedData.companyName,
+      enterpriseLicenses: editedData.enterpriseLicenses,
+      cascadeLicenses: editedData.cascadeLicenses,
+      teamSize: (parseInt(editedData.enterpriseLicenses) + parseInt(editedData.cascadeLicenses)).toString(),
+      totalCost: totalCost
+    };
+    
+    updateQuoteData(updatedQuoteData);
+    setShowEditModal(false);
+  };
+  
+  const startNewQuote = () => {
+    navigate('/quote-form');
+  };
   const quoteRef = useRef(null);
 
   const generatePDF = () => {
@@ -86,11 +123,7 @@ const QuoteReview = ({ quoteData }) => {
     doc.text('Total Annual Cost:', 100, y);
     doc.text(`$${quoteData.totalCost}`, 170, y);
     
-    // Footer with contact information
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('For questions about this quote, please contact sales@codeium.com', 20, 270);
-    doc.text('www.codeium.com', 20, 277);
+    // No footer needed
 
     // Save the PDF
     doc.save(`Codeium_Quote_${quoteData.quoteId}.pdf`);
@@ -161,7 +194,7 @@ const QuoteReview = ({ quoteData }) => {
 
               <div className="mb-3">
                 <h5>Notes:</h5>
-                <ul>
+                <ul className="text-start">
                   <li>This quote is valid for 30 days from the date of issue.</li>
                   <li>Prices are in USD and do not include applicable taxes.</li>
                   <li>Licenses are billed annually.</li>
@@ -172,20 +205,84 @@ const QuoteReview = ({ quoteData }) => {
 
           <div className="d-flex justify-content-center mt-4">
             <Button 
-              as={Link} 
-              to="/quote-form" 
               variant="outline-secondary" 
               className="me-2"
+              onClick={() => setShowEditModal(true)}
             >
               Edit Quote
             </Button>
             <Button 
               variant="primary" 
               onClick={generatePDF}
+              className="me-2"
             >
               Download PDF
             </Button>
+            <Button 
+              variant="outline-primary"
+              onClick={startNewQuote}
+            >
+              New Quote
+            </Button>
           </div>
+          
+          {/* Edit Modal */}
+          <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Edit Quote</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form>
+                <Form.Group className="mb-3" controlId="editCompanyName">
+                  <Form.Label>Company Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="companyName"
+                    value={editedData.companyName}
+                    onChange={handleEditChange}
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-3" controlId="editEnterpriseLicenses">
+                  <Form.Label>Enterprise Licenses ($1,000/year)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="enterpriseLicenses"
+                    value={editedData.enterpriseLicenses}
+                    onChange={handleEditChange}
+                    min="0"
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-3" controlId="editCascadeLicenses">
+                  <Form.Label>Cascade Licenses ($2,000/year)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="cascadeLicenses"
+                    value={editedData.cascadeLicenses}
+                    onChange={handleEditChange}
+                    min="0"
+                  />
+                </Form.Group>
+                
+                <div className="quote-total mb-3">
+                  <span>Total Annual Cost:</span>
+                  <span>
+                    ${parseInt(editedData.enterpriseLicenses || 0) * 1000 + 
+                      parseInt(editedData.cascadeLicenses || 0) * 2000}
+                  </span>
+                </div>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleEditSubmit}>
+                Save Changes
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Container>
