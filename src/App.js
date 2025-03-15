@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 import Header from './components/Header';
-import Footer from './components/Footer';
 import LandingPage from './components/LandingPage';
 import QuoteForm from './components/QuoteForm';
 import QuoteReview from './components/QuoteReview';
@@ -37,12 +36,13 @@ function App() {
               element={<QuoteForm quoteData={quoteData} updateQuoteData={updateQuoteData} />} 
             />
             <Route 
-              path="/quote-review" 
-              element={<QuoteReview quoteData={quoteData} />} 
+              path="/quote" 
+              element={<QuoteReview quoteData={quoteData} updateQuoteData={updateQuoteData} />} 
             />
+            {/* Redirect old route to new route */}
+            <Route path="/quote-review" element={<Navigate to="/quote" replace />} />
           </Routes>
         </main>
-        <Footer />
       </div>
     </Router>
   );
