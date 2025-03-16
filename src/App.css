@@ -13,19 +13,24 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
 .App {
   text-align: center;
   min-height: 100vh;
-  padding: 2rem 0;
+  padding: 2rem 0 2rem 0;
 }
+
+
 
 .form-container {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0 20px 20px 20px;
   gap: 20px;
 }
 
 .main-form {
   flex: 2;
+  min-width: 300px;
   border: 2px solid #333;
   border-radius: 10px;
   padding: 30px;
@@ -34,6 +39,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
 
 .sidebar {
   flex: 1;
+  min-width: 250px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -47,13 +53,25 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
 }
 
 .cascade-box {
-  background-color: #2a9ec4;
+  background-color: #0AB7A2;
   color: #000;
 }
 
 .enterprise-box {
   background-color: #6c757d;
   color: white;
+}
+
+.logo-header {
+  display: none; /* Hide the logo in the form header since we have it at the top now */
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.codeium-logo {
+  width: 50px;
+  height: 50px;
+  margin-right: 15px;
 }
 
 .form-title {
@@ -89,10 +107,16 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
   text-align: center;
   cursor: pointer;
   transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .toggle-option.active {
-  background-color: #2a9ec4;
+  background-color: #0AB7A2;
   color: #000;
 }
 
@@ -111,17 +135,22 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
   color: #f0f0f0;
 }
 
+.percentage-value {
+  color: #0AB7A2;
+  font-weight: 600;
+}
+
 .license-input {
   margin-bottom: 1.5rem;
 }
 
 .cascade-input {
-  background-color: rgba(42, 158, 196, 0.1);
-  border: 1px solid #2a9ec4;
+  background-color: rgba(10, 183, 162, 0.1);
+  border: 1px solid #0AB7A2;
 }
 
 .btn-generate {
-  background-color: #2a9ec4;
+  background-color: #0AB7A2;
   color: #000;
   border: none;
   padding: 10px 20px;
@@ -142,7 +171,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
 }
 
 .quote-header {
-  border-bottom: 2px solid #2a9ec4;
+  border-bottom: 2px solid #0AB7A2;
   padding-bottom: 1rem;
   margin-bottom: 2rem;
 }
@@ -183,4 +212,49 @@ h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li {
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+}
+
+/* Media Queries for Responsive Layout */
+@media (max-width: 992px) {
+  .form-container {
+    flex-direction: column;
+  }
+  
+  .main-form {
+    flex: 1;
+    width: 100%;
+    order: 1;
+  }
+  
+  .sidebar {
+    flex: 1;
+    width: 100%;
+    order: 2;
+  }
+}
+
+@media (max-width: 576px) {
+  .toggle-container {
+    flex-direction: column;
+    border-radius: 10px;
+  }
+  
+  .toggle-option {
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 60px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
 }

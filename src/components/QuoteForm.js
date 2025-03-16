@@ -166,7 +166,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>What percentage of your team needs advanced AI features versus basic code completion?</span>
-                    <span>{formData.aiFeaturePercentage}%</span>
+                    <span className="percentage-value">{formData.aiFeaturePercentage}%</span>
                   </div>
                   <Form.Range
                     name="aiFeaturePercentage"
@@ -174,7 +174,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Basic features</small>
@@ -185,7 +185,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>How often does your team work on complex design problems instead of routine coding?</span>
-                    <span>{formData.complexDesignFrequency}%</span>
+                    <span className="percentage-value">{formData.complexDesignFrequency}%</span>
                   </div>
                   <Form.Range
                     name="complexDesignFrequency"
@@ -193,7 +193,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Routine coding</small>
@@ -204,7 +204,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>What percentage of your team builds new features versus maintains existing codebases?</span>
-                    <span>{formData.newFeaturesPercentage}%</span>
+                    <span className="percentage-value">{formData.newFeaturesPercentage}%</span>
                   </div>
                   <Form.Range
                     name="newFeaturesPercentage"
@@ -212,7 +212,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Maintenance</small>
@@ -257,7 +257,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
             )}
             
             <div className="text-center">
-              <Button type="submit" className="btn-generate" style={{ backgroundColor: '#2a9ec4' }}>
+              <Button type="submit" className="btn-generate" style={{ backgroundColor: '#0AB7A2' }}>
                 Generate Quote
               </Button>
             </div>
