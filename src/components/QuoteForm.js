@@ -174,7 +174,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Basic features</small>
@@ -193,7 +193,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Routine coding</small>
@@ -212,7 +212,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                     onChange={handleSliderChange}
                     min="0"
                     max="100"
-                    style={{ accentColor: '#2a9ec4' }}
+                    style={{ accentColor: '#0AB7A2' }}
                   />
                   <div className="d-flex justify-content-between">
                     <small>Maintenance</small>
@@ -257,7 +257,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
             )}
             
             <div className="text-center">
-              <Button type="submit" className="btn-generate" style={{ backgroundColor: '#2a9ec4' }}>
+              <Button type="submit" className="btn-generate" style={{ backgroundColor: '#0AB7A2' }}>
                 Generate Quote
               </Button>
             </div>

@@ -10,30 +10,30 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
   const generatePDF = () => {
     const doc = new jsPDF();
     
-    // Add Codeium logo/header
+    // Add Codeium header text
     doc.setFontSize(20);
-    doc.setTextColor(42, 158, 196);
-    doc.text("Codeium", 20, 20);
+    doc.setTextColor(10, 183, 162);
+    doc.text("Codeium", 20, 25);
     
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
-    doc.text("Product Quote", 20, 30);
+    doc.text("Product Quote", 20, 40);
     
     // Add quote details
     doc.setFontSize(12);
-    doc.text(`Quote #: ${quoteData.quoteId}`, 20, 45);
-    doc.text(`Date: ${quoteData.quoteDate}`, 20, 52);
-    doc.text(`Valid Until: ${quoteData.expiryDate}`, 20, 59);
+    doc.text(`Quote #: ${quoteData.quoteId}`, 20, 55);
+    doc.text(`Date: ${quoteData.quoteDate}`, 20, 62);
+    doc.text(`Valid Until: ${quoteData.expiryDate}`, 20, 69);
     
     // Add company info
-    doc.text(`Prepared for: ${quoteData.companyName}`, 20, 70);
+    doc.text(`Prepared for: ${quoteData.companyName}`, 20, 80);
     
     // Add license details
     doc.setFontSize(14);
-    doc.text("License Details", 20, 85);
+    doc.text("License Details", 20, 95);
     doc.setFontSize(12);
     
-    let y = 95;
+    let y = 105;
     
     if (quoteData.cascadeLicenses > 0) {
       doc.text(`Cascade Licenses: ${quoteData.cascadeLicenses.toLocaleString()} × $2,000`, 20, y);
@@ -58,7 +58,7 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
     
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Total Annual Cost: `, 20, y);
+    doc.text(`Total Annual Cost:`, 20, y);
     doc.text(`$${quoteData.totalCost.toLocaleString()}`, 170, y, { align: 'right' });
     
     // Add footer
@@ -138,10 +138,10 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
         <Button variant="outline-light" onClick={handleEditQuote}>
           Edit Quote
         </Button>
-        <Button variant="primary" onClick={generatePDF} style={{ backgroundColor: '#2a9ec4', borderColor: '#2a9ec4' }}>
+        <Button variant="primary" onClick={generatePDF} style={{ backgroundColor: '#0AB7A2', borderColor: '#0AB7A2' }}>
           Download Quote
         </Button>
-        <Button variant="outline-primary" onClick={handleNewQuote} style={{ borderColor: '#2a9ec4', color: '#2a9ec4' }}>
+        <Button variant="outline-primary" onClick={handleNewQuote} style={{ borderColor: '#0AB7A2', color: '#0AB7A2' }}>
           Generate New Quote
         </Button>
       </div>
