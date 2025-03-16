@@ -166,7 +166,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>What percentage of your team needs advanced AI features versus basic code completion?</span>
-                    <span>{formData.aiFeaturePercentage}%</span>
+                    <span className="percentage-value">{formData.aiFeaturePercentage}%</span>
                   </div>
                   <Form.Range
                     name="aiFeaturePercentage"
@@ -185,7 +185,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>How often does your team work on complex design problems instead of routine coding?</span>
-                    <span>{formData.complexDesignFrequency}%</span>
+                    <span className="percentage-value">{formData.complexDesignFrequency}%</span>
                   </div>
                   <Form.Range
                     name="complexDesignFrequency"
@@ -204,7 +204,7 @@ const QuoteForm = ({ quoteData, updateQuoteData }) => {
                 <div className="slider-container">
                   <div className="slider-label">
                     <span>What percentage of your team builds new features versus maintains existing codebases?</span>
-                    <span>{formData.newFeaturesPercentage}%</span>
+                    <span className="percentage-value">{formData.newFeaturesPercentage}%</span>
                   </div>
                   <Form.Range
                     name="newFeaturesPercentage"
