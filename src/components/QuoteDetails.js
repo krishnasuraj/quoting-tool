@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Row, Col } from 'react-bootstrap';
+import ContactForm from './ContactForm';
 import { jsPDF } from 'jspdf';
 
 const QuoteDetails = ({ quoteData, updateQuoteData }) => {
   const navigate = useNavigate();
   const quoteRef = useRef(null);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -144,7 +146,21 @@ const QuoteDetails = ({ quoteData, updateQuoteData }) => {
         <Button variant="outline-primary" onClick={handleNewQuote} style={{ borderColor: '#0AB7A2', color: '#0AB7A2' }}>
           Generate New Quote
         </Button>
+        <Button 
+          variant="outline-primary" 
+          onClick={() => setShowContactForm(true)} 
+          style={{ borderColor: '#0AB7A2', color: '#0AB7A2' }}
+        >
+          I want to be contacted
+        </Button>
       </div>
+      
+      {/* Contact Form Modal */}
+      <ContactForm 
+        show={showContactForm} 
+        onHide={() => setShowContactForm(false)} 
+        quoteData={quoteData} 
+      />
     </Container>
   );
 };
